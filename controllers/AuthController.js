@@ -1,7 +1,9 @@
 import prisma from "../DB/db.config.js";
 import vine, { errors } from "@vinejs/vine";
-import { registerSchema } from "../validations/authvalidation.js";
+import { registerSchema,loginSchema } from "../validations/authvalidation.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+
 class AuthController {
   static async register(req, res) {
     try {
@@ -38,7 +40,47 @@ class AuthController {
       }
     }
   }
-  
+  static async login(req, res) {
+    try {
+    const body=req.body;
+    const validator = vine.compile(loginSchema); 
+    const payload = await validator.validate(body);
+
+
+    //* find user
+    const findUser=await prisma.users.findUnique({
+      where: { 
+        email: payload.email
+       },
+    })
+
+    if (findUser){
+      if(!bcrypt.compareSync(payload.password,findUser.password)){
+        return res.status(400).json({errors:{
+          message:"Invalid Credentials."
+        },
+      });
+      } 
+
+      
+      return res.json({message:"Logged in"});
+    }
+    return res.status(400).json({errors:{
+      message:"No user found with this email address."
+    }})
+    return res.json({ payload });
+  }
+  catch (error) {
+    console.log("the error,error");
+      if (error instanceof errors.E_VALIDATION_ERROR) {
+        //console.log(error.messages);
+        return res.status(400).json({ errors: error.messages });
+      }
+      else{
+         return res.status(500).json({ status:500, message:"Something Went Wrong.Please try again." });
+      }
+  };
+};
 }
 
 export default AuthController;
