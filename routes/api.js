@@ -10,6 +10,6 @@ router.post("/auth/login", AuthController.login);
 
 //*profile routes
 router.get("/profile", authMiddleware, ProfileController.index); //Private route
-router.put("/profile/id", authMiddleware, ProfileController.update);//update profile route
+router.put("/profile/:id", authMiddleware, ProfileController.update);//update profile route
 
 export default router;
