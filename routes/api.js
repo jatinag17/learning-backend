@@ -1,9 +1,14 @@
-import {Router} from "express";
+import { Router } from "express";
 import AuthController from "../controllers/AuthController.js";
+import authMiddleware from "../middleware/Authenticate.js";
+import ProfileController from "../controllers/ProfileController.js";
 
-const router=Router();
+const router = Router();
 
-router.post("/auth/register",AuthController.register);
-router.post("/auth/login",AuthController.login);
+router.post("/auth/register", AuthController.register);
+router.post("/auth/login", AuthController.login);
+
+//*profile routes
+router.get("/profile", authMiddleware, ProfileController.index); //Private router
 
 export default router;
