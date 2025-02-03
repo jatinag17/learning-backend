@@ -47,31 +47,41 @@ class AuthController {
     const payload = await validator.validate(body);
 
 
-    //* find user
+    //* find user with email
     const findUser=await prisma.users.findUnique({
       where: { 
-        email: payload.email
+        email: payload.email,
        },
     })
 
     if (findUser){
       if(!bcrypt.compareSync(payload.password,findUser.password)){
         return res.status(400).json({errors:{
-          message:"Invalid Credentials."
+          email:"Invalid Credentials.",
         },
       });
       } 
 
+      // Issue token to user
+      const payloadData={
+        id:findUser.id,
+        name:findUser.name,
+        email:findUser.email,
+        profile:findUser.profile,
+      }
+      const token=jwt.sign(payloadData,process.env.JWT_SECRET,{
+        expiresIn:"365d"
+      });
       
-      return res.json({message:"Logged in"});
+      return res.json({message:"Logged in",access_token:`Bearer ${token}`});
     }
     return res.status(400).json({errors:{
-      message:"No user found with this email address."
-    }})
-    return res.json({ payload });
+      email:"No user found with this email address."
+    },
+  });
   }
   catch (error) {
-    console.log("the error,error");
+    console.log("the error",error);
       if (error instanceof errors.E_VALIDATION_ERROR) {
         //console.log(error.messages);
         return res.status(400).json({ errors: error.messages });
